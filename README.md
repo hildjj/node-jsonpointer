@@ -15,6 +15,10 @@ This is an implementation of [JSON Pointer](http://tools.ietf.org/html/draft-iet
 
     jsonpointer.set(obj, "/foo", 6); // obj.foo = 6;
 
+    var foo = jsonpointer.compile("/foo");
+    var six = foo(obj);
+    var six_again = foo(obj, 7); // obj.foo = 7;
+
 ## Testing
 
     $ node test.js

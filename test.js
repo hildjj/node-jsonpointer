@@ -12,6 +12,12 @@ var obj = {
   }
 };
 
+var f = jsonpointer.compile("/a");
+assert.equal(f(obj), 1);
+assert.equal(f(obj, 2), 1);
+assert.equal(f(obj), 2);
+assert.equal(f(obj, 1), 2);
+
 assert.equal(jsonpointer.get(obj, "/a"), 1);
 assert.equal(jsonpointer.get(obj, "/b/c"), 2);
 assert.equal(jsonpointer.get(obj, "/d/e/0/a"), 3);
@@ -47,13 +53,17 @@ var complexKeys = {
     "e/f": 2
   },
   "~1": 3,
-  "01": 4
+  "01": 4,
+  "\u2018foo\u2019": 5,
+  "\b\f\n\r\t\v\'\"\\\251\xa9": 6
 }
 
 assert.equal(jsonpointer.get(complexKeys, "/a~1b/c"), 1);
 assert.equal(jsonpointer.get(complexKeys, "/d/e~1f"), 2);
 assert.equal(jsonpointer.get(complexKeys, "/~01"), 3);
 assert.equal(jsonpointer.get(complexKeys, "/01"), 4);
+assert.equal(jsonpointer.get(complexKeys, "/\u2018foo\u2019"), 5);
+assert.equal(jsonpointer.get(complexKeys, "/\b\f\n\r\t\v\'\"\\\251\xa9"), 6);
 assert.equal(jsonpointer.get(complexKeys, "/a/b/c"), null);
 assert.equal(jsonpointer.get(complexKeys, "/~1"), null);
 
