@@ -1,5 +1,16 @@
 var console = require("console");
 
+exports.use_cache = true;
+
+var cache = {
+  "": function(obj, value) {
+        if (typeof value !== 'undefined') {
+          throw(new Error('Invalid JSON pointer for set.'));
+        }
+        return obj;
+      }
+};
+
 var untilde = function(str) {
   return str.replace(/~./g, function(m) {
     switch (m) {
@@ -13,33 +24,27 @@ var untilde = function(str) {
 }
 
 var compile = function(pointer) {
-  if(pointer === "") {
-    pointer = [];
-  } else {
-    if(!pointer) {
-      throw("Invalid JSON pointer.");
-    }
-
-    pointer = pointer.split("/");
-    var first = pointer.shift();
-    if (first !== "") {
-      throw("Invalid JSON pointer.");
-    }
+  if (typeof pointer !== 'string') {
+    // This will catch null and undefined as well.
+    throw(new Error("Invalid JSON pointer."))
   }
 
-  var len = pointer.length;
-  if (len === 0) {
-    return function(obj, value) {
-      if (typeof value !== 'undefined') {
-        throw(new Error('Invalid JSON pointer for set.'));
-      }
-      return obj;
-    }
+  if (exports.use_cache) {
+    var cf = cache[pointer];
+    if (cf) { return cf; }
+  } else if (pointer === "") {
+    return cache[""];
   }
 
-  pointer = pointer.map(untilde);
+  var aptr = pointer.split("/");
+  if (aptr.shift() !== "") {
+    throw("Invalid JSON pointer.");
+  }
 
-  return function(obj, value) {
+  var len = aptr.length;
+  aptr = aptr.map(untilde);
+
+  var f = function(obj, value) {
     var parent = null;
     var part = null;
     for (var i=0; i<len; i++) {
@@ -50,7 +55,7 @@ var compile = function(pointer) {
         return null;
       }
       parent = obj;
-      part = pointer[i];
+      part = aptr[i];
       obj = obj[part];
     }
 
@@ -59,6 +64,10 @@ var compile = function(pointer) {
     }
     return obj;
   }
+  if (exports.use_cache) {
+    cache[pointer] = f;
+  }
+  return f;
 }
 
 var get = function(obj, pointer) {
